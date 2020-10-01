@@ -3,8 +3,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE notes (
     id uuid DEFAULT uuid_generate_v4 (), 
     name TEXT NOT NULL,
-    folderId INTEGER NOT NULL,
-    content TEXT NOT NULL
+    modified TIMESTAMPTZ NOT NULL DEFAULT now(),
+    folder_id INTEGER REFERENCES folders(id) ON DELETE CASCADE NOT NULL,
+    content TEXT DEFAULT '' 
 );
 
 CREATE TABLE folders (
