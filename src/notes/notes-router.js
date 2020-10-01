@@ -38,7 +38,7 @@ notesRouter
       .catch(next);
   });
 notesRouter  
-  .route('/note/:id')
+  .route('/notes/:id')
   .all((req,res,next)=>{
     notesService.getById(
       req.app.get('db'),

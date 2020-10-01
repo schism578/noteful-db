@@ -17,9 +17,9 @@ app.use(morgan((NODE_ENV === 'production') ? 'tiny' : 'common', {
 app.use(helmet())
 app.use(cors())
 
-app.use('/api/folders', foldersRouter);
+app.use('/folders', foldersRouter);
 
-app.use('/api/notes', notesRouter);
+app.use('/notes', notesRouter);
 
 app.use(function validateBearerToken(req, res, next) {
     const apiToken = process.env.API_TOKEN
