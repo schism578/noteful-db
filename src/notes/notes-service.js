@@ -1,4 +1,4 @@
-const NotesService = {
+const notesService = {
     getAllNotes(knex) {
         return knex
             .select('*')
@@ -33,4 +33,4 @@ const NotesService = {
     }
 };
 
-module.exports = NotesService;
+module.exports = notesService;

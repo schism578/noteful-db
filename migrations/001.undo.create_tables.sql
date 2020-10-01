@@ -1,3 +1,3 @@
-DROP TABLE IF EXISTS noteful_notes;
+DROP TABLE IF EXISTS notes;
 
-DROP TABLE IF EXISTS noteful_folders;
+DROP TABLE IF EXISTS folders;

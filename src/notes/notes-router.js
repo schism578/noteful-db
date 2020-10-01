@@ -1,9 +1,9 @@
 const express = require('express');
 const xss = require('xss');
-const logger = require('./logger');
-const NotesService = require('./notes-service');
+//const logger = require('./logger');
+const notesService = require('./notes-service');
 
-const NotesRouter = express.Router();
+const notesRouter = express.Router();
 const bodyParser = express.json();
 
 const serializeNote = note => ({
@@ -12,11 +12,11 @@ const serializeNote = note => ({
   content: xss(note.content)
 });
 
-NotesRouter
+notesRouter
   .route('/api/notes')
   .get((req,res,next) => {
     const knexInstance = req.app.get('db');
-    FoldersService.getAllNotes(knexInstance)
+    foldersService.getAllNotes(knexInstance)
       .then(notes => {
         res.json(notes.map(note => serializeNote(note)));
       })
@@ -25,7 +25,7 @@ NotesRouter
   .post(bodyParser, (req,res,next) =>{
     const { name,content,folder_id } = req.body;
     const newNote = { name,content,folder_id};
-    NotesService.insertNote(
+    notesService.insertNote(
       req.app.get('db'),
       newNote
     )
@@ -37,10 +37,10 @@ NotesRouter
       })
       .catch(next);
   });
-NotesRouter  
+notesRouter  
   .route('/api/note/:id')
   .all((req,res,next)=>{
-    NotesService.getById(
+    notesService.getById(
       req.app.get('db'),
       req.params.id
     )
@@ -61,7 +61,7 @@ NotesRouter
   .delete((req,res,next)=>{
     const { id } = req.params;
     const knexInstance = req.app.get('db');
-    NotesService.deleteNote(knexInstance,id)
+    notesService.deleteNote(knexInstance,id)
       .then(() => {
         res.status(204).end();
       })
@@ -80,7 +80,7 @@ NotesRouter
       });
     }
 
-    NotesService.updateNote(
+    notesService.updateNote(
       req.app.get('db'),
       req.params.id,
       noteToUpdate
@@ -91,4 +91,4 @@ NotesRouter
       .catch(next);
   });
 
-  module.exports = NotesRouter
+  module.exports = notesRouter

@@ -1,10 +1,10 @@
 const path = require('path')
 const express = require('express')
 const xss = require('xss')
-const logger = require('./logger');
-const FoldersService = require('./folders-service')
+//const logger = require('./logger');
+const foldersService = require('./folders-service')
 
-const FoldersRouter = express.Router()
+const foldersRouter = express.Router()
 const jsonParser = express.json()
 
 const serializeFolder = folder => ({
@@ -18,11 +18,11 @@ const serializeNote = note => ({
     content: xss(note.content)
 });
   
-FoldersRouter
+foldersRouter
     .route('/api/folders')
     .get((req, res, next) => {
         const knexInstance = req.app.get('db')
-        FoldersService.getAllFolders(knexInstance)
+        foldersService.getAllFolders(knexInstance)
         .then(folders => {
             res.json(folders.map(serializeFolder))
         })
@@ -40,7 +40,7 @@ FoldersRouter
         }
     }
     newFolder.name = name
-    FoldersService.insertFolder(
+    foldersService.insertFolder(
         req.app.get('db'),
         newFolder
     )
@@ -53,10 +53,10 @@ FoldersRouter
             .catch(next)
     })
 
-FoldersRouter
+foldersRouter
     .route('/api/:folder_id')
     .all((req, res, next) => {
-        FoldersService.getById(
+        foldersService.getById(
             req.app.get('db'),
             req.params.folder_id
         )
@@ -73,7 +73,7 @@ FoldersRouter
     })
     .get((req,res,next) => {
       const knexInstance = req.app.get('db');
-      FoldersService.getFolderNotes(knexInstance, req.params.id)
+      foldersService.getFolderNotes(knexInstance, req.params.id)
         .then((notes)=>{
           res.json(notes.map(note => serializeNote(note)));
         })
@@ -82,7 +82,7 @@ FoldersRouter
     .delete((req,res,next)=>{
       const { id } = req.params;
       const knexInstance = req.app.get('db');
-      FoldersService.deleteFolder(knexInstance,id)
+      foldersService.deleteFolder(knexInstance,id)
         .then(() => {
           res.status(204).end();
         })
@@ -99,7 +99,7 @@ FoldersRouter
                 }
             })
         }
-        FoldersService.updateFolder(
+        foldersService.updateFolder(
           req.app.get('db'),
           req.params.folder_id,
           folderToUpdate
@@ -110,4 +110,4 @@ FoldersRouter
           .catch(next);
       });
 
-module.exports = FoldersRouter
+module.exports = foldersRouter

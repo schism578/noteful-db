@@ -1,4 +1,4 @@
-const FoldersService = {
+const foldersService = {
     getAllFolders(knex) {
         return knex.select('*').from('folders')
     },
@@ -34,4 +34,4 @@ const FoldersService = {
           }
 }
 
-module.exports = FoldersService
+module.exports = foldersService

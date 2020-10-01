@@ -9,5 +9,5 @@ server.use(middlewares)
 server.use(router)
 
 server.listen(8000, () => {
-  console.log('Noteful json-server started at http://localhost:800')
+  console.log('Noteful json-server started at http://localhost:8000')
 })
