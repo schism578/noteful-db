@@ -58,7 +58,7 @@ foldersRouter
     .all((req, res, next) => {
         foldersService.getById(
             req.app.get('db'),
-            req.params.folder_id
+            req.params.folderId
         )
     .then(folder => {
         if (!folder) {
@@ -101,7 +101,7 @@ foldersRouter
         }
         foldersService.updateFolder(
           req.app.get('db'),
-          req.params.folder_id,
+          req.params.folderId,
           folderToUpdate
         )
           .then(() => {

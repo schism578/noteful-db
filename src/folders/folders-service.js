@@ -30,7 +30,7 @@ const foldersService = {
         },
         getFolderNotes(knex,id){
             return knex('notes')
-                .where({folder_id: id});
+                .where({folderId: id});
           }
 }
 

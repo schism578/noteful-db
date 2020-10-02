@@ -1,30 +1,40 @@
-const express = require('express');
-const xss = require('xss');
-//const logger = require('./logger');
-const notesService = require('./notes-service');
+const path = require('path')
+const express = require('express')
+const xss = require('xss')
+const notesService = require('./notes-service')
 
-const notesRouter = express.Router();
-const bodyParser = express.json();
+const notesRouter = express.Router()
+const jsonParser = express.json()
 
 const serializeNote = note => ({
-  ...note,
-  name: xss(note.name),
-  content: xss(note.content)
-});
+  id: note.id,
+  content: xss(note.content),
+  modified: note.modified,
+  folderId: note.folderId,
+})
 
 notesRouter
   .route('/')
-  .get((req,res,next) => {
-    const knexInstance = req.app.get('db');
+  .get((req, res, next) => {
+    const knexInstance = req.app.get('db')
     notesService.getAllNotes(knexInstance)
       .then(notes => {
-        res.json(notes.map(note => serializeNote(note)));
+        res.json(notes.map(serializeNote))
       })
-      .catch(next);
+      .catch(next)
   })
-  .post(bodyParser, (req,res,next) =>{
-    const { name,content,folder_id } = req.body;
-    const newNote = { name,content,folder_id};
+  .post(jsonParser, (req, res, next) => {
+    const { name, content, folderId, modified } = req.body
+    const newNote = { name, content, folderId }
+
+    for (const [key, value] of Object.entries(newNote))
+      if (value == null)
+        return res.status(400).json({
+          error: { message: `Missing '${key}' in request body` }
+        })
+
+    newNote.modified = modified;
+
     notesService.insertNote(
       req.app.get('db'),
       newNote
@@ -32,63 +42,64 @@ notesRouter
       .then(note => {
         res
           .status(201)
-          .location(req.originalUrl +`/${note.id}`)
-          .json(serializeNote(note));
+          .location(path.posix.join(req.originalUrl, `/${note.id}`))
+          .json(serializeNote(note))
       })
-      .catch(next);
-  });
-notesRouter  
-  .route('/:id')
-  .all((req,res,next)=>{
+      .catch(next)
+  })
+
+notesRouter
+  .route('/:note_id')
+  .all((req, res, next) => {
     notesService.getById(
       req.app.get('db'),
-      req.params.id
+      req.params.note.id
     )
-      .then(note =>{
+      .then(note => {
         if (!note) {
           return res.status(404).json({
-            error: { message: 'Note doesn\'t exist' }
-          });
+            error: { message: `Note doesn't exist` }
+          })
         }
-        res.note = note;
-        next();
+        res.note = note
+        next()
       })
-      .catch(next);
+      .catch(next)
   })
-  .get((req,res,next) => {
-    return res.json(serializeNote(res.note));
+  .get((req, res, next) => {
+    res.json(serializeNote(res.note))
   })
-  .delete((req,res,next)=>{
-    const { id } = req.params;
-    const knexInstance = req.app.get('db');
-    notesService.deleteNote(knexInstance,id)
-      .then(() => {
-        res.status(204).end();
+  .delete((req, res, next) => {
+    notesService.deleteNote(
+      req.app.get('db'),
+      req.params.note.id
+    )
+      .then(numRowsAffected => {
+        res.status(204).end()
       })
-      .catch(next);
+      .catch(next)
   })
-  .patch(bodyParser, (req, res, next) => {
-    const { name, content, folder_id } = req.body;
-    const noteToUpdate = { name, content,folder_id };
+  .patch(jsonParser, (req, res, next) => {
+    const { content, modified } = req.body
+    const noteToUpdate = { content, modified }
 
-    const numberOfValues = Object.values(noteToUpdate).filter(Boolean).length;
-    if (numberOfValues === 0) {
+    const numberOfValues = Object.values(noteToUpdate).filter(Boolean).length
+    if (numberOfValues === 0)
       return res.status(400).json({
         error: {
-          message: 'request body must contain either \'name\', \'content\', or \'folder_id\''
+          message: `Request body must contain either 'content' or 'modified date'`
         }
-      });
-    }
+      })
 
     notesService.updateNote(
       req.app.get('db'),
-      req.params.id,
+      req.params.note.id,
       noteToUpdate
     )
-      .then(() => {
-        res.status(204).end();
+      .then(numRowsAffected => {
+        res.status(204).end()
       })
-      .catch(next);
-  });
+      .catch(next)
+  })
 
-  module.exports = notesRouter
+module.exports = notesRouter
