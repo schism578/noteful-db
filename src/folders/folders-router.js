@@ -1,27 +1,27 @@
-const path = require('path')
-const express = require('express')
-const xss = require('xss')
-//const logger = require('./logger');
-const foldersService = require('./folders-service')
+const path = require('path');
+const express = require('express');
+const xss = require('xss');
+const foldersService = require('./folders-service');
 
 const foldersRouter = express.Router()
 const jsonParser = express.json()
 
 const serializeFolder = folder => ({
-    id: folder.id,
-    name: xss(folder.name),
+    folder_id: folder.folder_id,
+    folder_name: xss(folder.folder_name),
 })
 
 const serializeNote = note => ({
     ...note,
-    name: xss(note.name),
+    note_name: xss(note.note_name),
     content: xss(note.content)
 });
   
 foldersRouter
     .route('/')
     .get((req, res, next) => {
-        const knexInstance = req.app.get('db')
+        const knexInstance = req.app.get('db');
+
         foldersService.getAllFolders(knexInstance)
         .then(folders => {
             res.json(folders.map(serializeFolder))
@@ -29,8 +29,9 @@ foldersRouter
       .catch(next)
     })
     .post(jsonParser, (req, res, next) => {
-        const { name } = req.body
-        const newFolder = { name }
+        const knexInstance = req.app.get('db');
+        const { folder_name } = req.body;
+        const newFolder = { folder_name };
 
     for (const [key, value] of Object.entries(newFolder)) {
         if (value == null) {
@@ -39,27 +40,21 @@ foldersRouter
             })
         }
     }
-    newFolder.name = name
-    foldersService.insertFolder(
-        req.app.get('db'),
-        newFolder
-    )
-    .then(folder => {
-        res
-            .status(201)
-            .location(path.posix.join(req.originalUrl, `/${folder.id}`))
+    newFolder.folder_name = folder_name;
+
+    foldersService.insertFolder(knexInstance, newFolder)
+        .then(folder => {
+            res.status(201)
+            .location(path.posix.join(req.originalUrl + `/${folder.id}`))
             .json(serializeFolder(folder))
-    })
-            .catch(next)
+        })
+        .catch(next)
     })
 
 foldersRouter
     .route('/:folder_id')
     .all((req, res, next) => {
-        foldersService.getById(
-            req.app.get('db'),
-            req.params.folderId
-        )
+        foldersService.getById(req.app.get('db'), req.params.folder_id)
     .then(folder => {
         if (!folder) {
             return res.status(404).json({
@@ -73,41 +68,41 @@ foldersRouter
     })
     .get((req,res,next) => {
       const knexInstance = req.app.get('db');
-      foldersService.getFolderNotes(knexInstance, req.params.id)
+
+      foldersService.getFolderNotes(knexInstance, req.params.folder_id)
         .then((notes)=>{
           res.json(notes.map(note => serializeNote(note)));
         })
         .catch(next);
     })
     .delete((req,res,next)=>{
-      const { id } = req.params;
+        const folderToDelete = req.params.folder_id;
       const knexInstance = req.app.get('db');
-      foldersService.deleteFolder(knexInstance,id)
+
+      foldersService.deleteFolder(knexInstance, folderToDelete)
         .then(() => {
           res.status(204).end();
         })
         .catch(next);
     })
     .patch(jsonParser, (req, res, next) => {
-        const { name } = req.body
-        const folderToUpdate = { name }
-        const numberOfValues = Object.values(folderToUpdate).filter(Boolean).length
-        if (numberOfValues === 0) {
-            return res.status(400).json({
-                error: {
-                    message: `Request body must contain 'name'`
-                }
-            })
-        }
-        foldersService.updateFolder(
-          req.app.get('db'),
-          req.params.folderId,
-          folderToUpdate
-        )
-          .then(() => {
-            res.status(204).end();
-          })
-          .catch(next);
-      });
+        const knexInstance = req.app.get('db');
+        const { folder_name } = req.body;
+        const folderToUpdate = req.params.folder_id;
+        const updatedFolder = { folder_name };
+    
+    if(!folder_name){
+        return res.status(400).json({ 
+            error: { message: `Request body must contain Folder Name`}
+        });
+    }
 
-module.exports = foldersRouter
+    foldersService.updateFolder(knexInstance, folderToUpdate, updatedFolder)
+     .then(() => {
+         res.status(204).end();
+     })
+     .catch(next);
+  })
+  
+
+ module.exports = foldersRouter
