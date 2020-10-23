@@ -8,13 +8,13 @@ const foldersRouter = express.Router()
 const jsonParser = express.json()
 
 const serializeFolder = folder => ({
-    id: folder.id,
-    name: xss(folder.name),
+    id: folder.folder_id,
+    name: xss(folder.folder_name),
 })
 
 const serializeNote = note => ({
     ...note,
-    name: xss(note.name),
+    name: xss(note.note_name),
     content: xss(note.content)
 });
   
@@ -30,7 +30,7 @@ foldersRouter
     })
     .post(jsonParser, (req, res, next) => {
         const { name } = req.body
-        const newFolder = { name }
+        const newFolder = { folder_name: name }
 
     for (const [key, value] of Object.entries(newFolder)) {
         if (value == null) {
@@ -39,7 +39,7 @@ foldersRouter
             })
         }
     }
-    newFolder.name = name
+    newFolder.folder_name = name
     foldersService.insertFolder(
         req.app.get('db'),
         newFolder
@@ -47,7 +47,7 @@ foldersRouter
     .then(folder => {
         res
             .status(201)
-            .location(path.posix.join(req.originalUrl, `/${folder.id}`))
+            .location(path.posix.join(req.originalUrl, `/${folder.folder_id}`))
             .json(serializeFolder(folder))
     })
             .catch(next)
@@ -90,7 +90,7 @@ foldersRouter
     })
     .patch(jsonParser, (req, res, next) => {
         const { name } = req.body
-        const folderToUpdate = { name }
+        const folderToUpdate = { folder_name: name }
         const numberOfValues = Object.values(folderToUpdate).filter(Boolean).length
         if (numberOfValues === 0) {
             return res.status(400).json({

@@ -17,18 +17,18 @@ const notesService = {
         return knex
             .from('notes')
             .select('*')
-            .where('id', id).first();
+            .where('note_id', id).first();
     },
 
     deleteNote(knex, id) {
         return knex('notes')
-            .where({ id })
+            .where('note_id', id)
             .delete();
     },
 
     updateNote(knex, id, newNote) {
         return knex('notes')
-            .where({id })
+            .where('note_id', id)
             .update(newNote);
     }
 };
