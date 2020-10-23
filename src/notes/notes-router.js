@@ -7,6 +7,7 @@ const notesRouter = express.Router()
 const jsonParser = express.json()
 
 const serializeNote = note => ({
+  name: note.note_name,
   id: note.note_id,
   content: xss(note.content),
   modified: note.modified,
