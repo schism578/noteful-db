@@ -73,7 +73,7 @@ notesRouter
   .delete((req, res, next) => {
     notesService.deleteNote(
       req.app.get('db'),
-      req.params.note.note_id
+      req.params.note_id
     )
       .then(numRowsAffected => {
         res.status(204).end()
@@ -94,7 +94,7 @@ notesRouter
 
     notesService.updateNote(
       req.app.get('db'),
-      req.params.note.note_id,
+      req.params.note_id,
       noteToUpdate
     )
       .then(numRowsAffected => {
